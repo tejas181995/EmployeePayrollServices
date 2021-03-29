@@ -11,6 +11,8 @@ public class EmpPayRoll {
     private static final String URL = "jdbc:mysql://localhost:3306/ Emp_payroll_service?allowPublicKeyRetrieval=true&useSSL=false";
     private static final String user = "tejas";
     private static final String password = "Password@123";
+    List<EmpPayRollData> employeePayrollData = new ArrayList<>();
+
 
     private Connection connectonEstablish() {
         Connection connection = null;
@@ -40,7 +42,7 @@ public class EmpPayRoll {
     }
     public List<EmpPayRollData> readData() {
         String sql = "SELECT * FROM emp_payroll";
-        List<EmpPayRollData> employeePayrollData = new ArrayList<>();
+        employeePayrollData = new ArrayList<>();
         try (Connection connection = this.connectonEstablish()) {
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery(sql);
@@ -49,7 +51,8 @@ public class EmpPayRoll {
                 String name = resultSet.getString("name");
                 String gender = resultSet.getString("gender");
                 LocalDate startDate = resultSet.getDate("start").toLocalDate();
-                employeePayrollData.add(new EmpPayRollData(id, name, gender, startDate));
+                double salary = resultSet.getDouble("salary");
+                employeePayrollData.add(new EmpPayRollData(id, name, gender, startDate, salary));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -57,8 +60,19 @@ public class EmpPayRoll {
         return employeePayrollData;
     }
 
-    public static void main(String[] args) {
-        EmpPayRoll employeePayroll = new EmpPayRoll();
-        employeePayroll.connectonEstablish();
+    public double updateEmployeeData(double salary, String name) {
+        String sql = String.format("update emp_payroll set salary = %.2f where name = '%s';", salary, name);
+        try (Connection connection = this.connectonEstablish()) {
+            Statement statement = connection.createStatement();
+            statement.executeUpdate(sql);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        for (EmpPayRollData data : employeePayrollData) {
+            if(data.name.equals(name)){
+                return data.salary;
+            }
+        }
+        return 0.0;
     }
 }
