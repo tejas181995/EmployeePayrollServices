@@ -11,11 +11,12 @@ public class EmpPayRoll {
     private static final String URL = "jdbc:mysql://localhost:3306/ Emp_payroll_service?allowPublicKeyRetrieval=true&useSSL=false";
     private static final String user = "tejas";
     private static final String password = "Password@123";
+    public Connection connection;
     List<EmpPayRollData> employeePayrollData = new ArrayList<>();
 
 
     private Connection connectonEstablish() {
-        Connection connection = null;
+
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
             System.out.println("Driver found!");
@@ -61,13 +62,17 @@ public class EmpPayRoll {
     }
 
     public double updateEmployeeData(double salary, String name) {
-        String sql = String.format("update emp_payroll set salary = %.2f where name = '%s';", salary, name);
-        try (Connection connection = this.connectonEstablish()) {
-            Statement statement = connection.createStatement();
-            statement.executeUpdate(sql);
+        try {
+            this.connectonEstablish();
+            PreparedStatement preparedStatement = connection.prepareStatement("update emp_payroll set salary=? where name =?");
+            preparedStatement.setDouble(1, salary);
+            preparedStatement.setString(2,name);
+            preparedStatement.executeUpdate();
+            connection.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        this.readData();
         for (EmpPayRollData data : employeePayrollData) {
             if(data.name.equals(name)){
                 return data.salary;
@@ -76,3 +81,4 @@ public class EmpPayRoll {
         return 0.0;
     }
 }
+
