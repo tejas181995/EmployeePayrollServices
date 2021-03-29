@@ -12,6 +12,7 @@ public class EmpPayRoll {
     private static final String user = "tejas";
     private static final String password = "Password@123";
     public Connection connection;
+    public Statement statement;
     List<EmpPayRollData> employeePayrollData = new ArrayList<>();
 
 
@@ -20,7 +21,9 @@ public class EmpPayRoll {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
             System.out.println("Driver found!");
-        } catch (ClassNotFoundException e) {
+            connection = DriverManager.getConnection(URL, user, password);
+            statement = connection.createStatement();
+        } catch (ClassNotFoundException | SQLException e) {
             e.printStackTrace();
         }
         listDrivers();
@@ -41,25 +44,34 @@ public class EmpPayRoll {
             System.out.println("Driver: " + driverClass.getClass().getName());
         }
     }
-    public List<EmpPayRollData> readData() {
-        String sql = "SELECT * FROM emp_payroll";
-        employeePayrollData = new ArrayList<>();
-        try (Connection connection = this.connectonEstablish()) {
-            Statement statement = connection.createStatement();
+    public List<EmpPayRollData> readData(String sql) {
+        try {
+            try {
+                if (connection == null || connection.isClosed())
+                    throw new EmpPayRollException("Connection is not established");
+            }
+            catch (EmpPayRollException e) {
+                System.out.println(e);
+                connectonEstablish();
+            }
             ResultSet resultSet = statement.executeQuery(sql);
             while (resultSet.next()) {
                 int id = resultSet.getInt("id");
                 String name = resultSet.getString("name");
+                double salary = resultSet.getDouble("salary");
                 String gender = resultSet.getString("gender");
                 LocalDate startDate = resultSet.getDate("start").toLocalDate();
-                double salary = resultSet.getDouble("salary");
                 employeePayrollData.add(new EmpPayRollData(id, name, gender, startDate, salary));
             }
+            connection.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        employeePayrollData.forEach(data -> System.out.println(data.id
+                +" "+data.name+" "+data.salary+" "+data.start+" "+data.gender));
         return employeePayrollData;
     }
+
 
     public double updateEmployeeData(double salary, String name) {
         try {
@@ -72,7 +84,8 @@ public class EmpPayRoll {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        this.readData();
+        String sql = "SELECT * FROM emp_payroll";
+        this.readData(sql);
         for (EmpPayRollData data : employeePayrollData) {
             if(data.name.equals(name)){
                 return data.salary;

@@ -9,7 +9,8 @@ public class EmpPayRollTest {
     @Test
     public void givenEmployeePayrollDB_WhenRetrieved_ShouldMatchEmployeeCount() {
         EmpPayRoll employeePayroll = new EmpPayRoll();
-        List<EmpPayRollData> employeePayrollDataList = employeePayroll.readData();
+        String sql = "SELECT * FROM emp_payroll";
+        List<EmpPayRollData> employeePayrollDataList = employeePayroll.readData(sql);
         System.out.println(employeePayrollDataList.size());
         Assertions.assertEquals(3, employeePayrollDataList.size());
     }
@@ -20,5 +21,13 @@ public class EmpPayRollTest {
         String name = "Bill";
         double salaryUpdated = employeePayroll.updateEmployeeData(salary, name);
         Assertions.assertEquals(salary, salaryUpdated);
+    }
+    @Test
+    public void retrieveDataByDateRangeTest() {
+        EmpPayRoll employeePayroll = new EmpPayRoll();
+        String sql = "SELECT * FROM emp_payroll WHERE start BETWEEN CAST('2015-01-01' AS DATE) AND DATE(NOW())";
+        List<EmpPayRollData> employeePayrollDataList = employeePayroll.readData(sql);
+        Assertions.assertEquals(3, employeePayrollDataList.size());
+
     }
 }
